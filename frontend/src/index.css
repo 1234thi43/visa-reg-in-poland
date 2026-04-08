@@ -1,0 +1,18 @@
+@import "tailwindcss";
+
+:root {
+  --color-primary: #2563eb;
+  --color-success: #16a34a;
+  --color-warning: #d97706;
+  --color-danger: #dc2626;
+}
+
+body {
+  @apply bg-gray-950 text-gray-100 min-h-screen;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.4); }
+  50% { box-shadow: 0 0 20px 4px rgba(37, 99, 235, 0.2); }
+}
