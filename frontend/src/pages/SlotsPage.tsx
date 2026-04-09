@@ -3,7 +3,7 @@ import { useSlots } from '../hooks/useSlots';
 import { StatusBadge } from '../components/StatusBadge';
 import { SlotCard } from '../components/SlotCard';
 import { EmptyState } from '../components/EmptyState';
-import { triggerCheck } from '../services/api';
+import { triggerCheck, triggerTestNotification } from '../services/api';
 
 interface SlotsPageProps {
   city?: City;
@@ -33,13 +33,21 @@ export function SlotsPage({ city, title }: SlotsPageProps) {
             </p>
           )}
         </div>
-        <button
-          onClick={handleManualCheck}
-          disabled={status === 'checking'}
-          className="rounded-lg bg-gray-800 border border-gray-700 px-4 py-2 text-sm text-gray-300 transition-all hover:bg-gray-700 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {status === 'checking' ? 'Проверяю...' : 'Проверить сейчас'}
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => triggerTestNotification()}
+            className="rounded-lg bg-yellow-600/20 border border-yellow-600/40 px-4 py-2 text-sm text-yellow-300 transition-all hover:bg-yellow-600/30 hover:text-yellow-200"
+          >
+            Тест уведомлений
+          </button>
+          <button
+            onClick={handleManualCheck}
+            disabled={status === 'checking'}
+            className="rounded-lg bg-gray-800 border border-gray-700 px-4 py-2 text-sm text-gray-300 transition-all hover:bg-gray-700 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {status === 'checking' ? 'Проверяю...' : 'Проверить сейчас'}
+          </button>
+        </div>
       </div>
 
       <StatusBadge status={status} lastCheck={lastCheck} />

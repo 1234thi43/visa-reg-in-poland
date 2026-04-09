@@ -1,13 +1,14 @@
 from __future__ import annotations
 
 import asyncio
-import json
 import logging
 from contextlib import asynccontextmanager
+from datetime import datetime
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.checker import VFSChecker
@@ -15,10 +16,12 @@ from app.models import (
     CheckResult,
     CheckStatus,
     City,
+    SlotInfo,
     SlotsResponse,
     StatusResponse,
     VFS_BOOKING_URL,
 )
+from app.notifier import notify_slots_found
 from app.scheduler import SlotMonitor
 
 logging.basicConfig(
@@ -138,6 +141,25 @@ def create_app(start_checker: bool = True) -> FastAPI:
             status=result.status,
         )
 
+    @app.post("/api/test-notification")
+    async def test_notification() -> SlotsResponse:
+        fake_slots = [
+            SlotInfo(city=City.PINSK, date="2026-04-15", time="10:00", details="ТЕСТ"),
+            SlotInfo(city=City.BARANOVICHI, date="2026-04-16", time="14:30", details="ТЕСТ"),
+        ]
+        notify_slots_found(fake_slots)
+        fake_result = CheckResult(
+            status=CheckStatus.OK,
+            slots=fake_slots,
+            last_check=datetime.now(),
+        )
+        await _broadcast(fake_result)
+        return SlotsResponse(
+            slots=fake_slots,
+            last_check=fake_result.last_check,
+            status=fake_result.status,
+        )
+
     @app.websocket("/ws")
     async def websocket_endpoint(ws: WebSocket):
         await ws.accept()
@@ -160,6 +182,10 @@ def create_app(start_checker: bool = True) -> FastAPI:
 
     static_dir = Path(__file__).parent.parent.parent / "frontend" / "dist"
     if static_dir.exists():
+        @app.get("/favicon.ico", include_in_schema=False)
+        async def favicon_ico_redirect():
+            return RedirectResponse(url="/favicon.svg")
+
         app.mount("/", StaticFiles(directory=str(static_dir), html=True), name="static")
 
     return app

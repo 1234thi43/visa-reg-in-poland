@@ -5,6 +5,12 @@ import { notifySlots, requestNotificationPermission } from '../services/notifica
 
 const POLL_INTERVAL = 15_000;
 
+function toWsOrigin(origin: string): string {
+  if (origin.startsWith('https://')) return `wss://${origin.slice('https://'.length)}`;
+  if (origin.startsWith('http://')) return `ws://${origin.slice('http://'.length)}`;
+  return origin;
+}
+
 export function useSlots(city?: City) {
   const [slots, setSlots] = useState<SlotInfo[]>([]);
   const [status, setStatus] = useState<CheckStatus>('idle');
@@ -44,8 +50,10 @@ export function useSlots(city?: City) {
   }, [refresh]);
 
   useEffect(() => {
-    const wsProto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${wsProto}//${window.location.host}/ws`;
+    const backendOrigin = (import.meta.env.VITE_BACKEND_ORIGIN as string | undefined)?.replace(/\/+$/, '');
+    const wsUrl = backendOrigin
+      ? `${toWsOrigin(backendOrigin)}/ws`
+      : `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/ws`;
     let ws: WebSocket | null = null;
     let reconnectTimer: ReturnType<typeof setTimeout>;
 
